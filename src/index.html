@@ -1,0 +1,196 @@
+<!document html>
+<html>
+    <head>
+        <title>TowerOfHanoi</title>
+        <link rel="icon" href="img/tower.png">
+
+        <!--style for the user interface and grafics-->
+        <style>
+            body {
+                background-color: #e9ebee;
+                margin: 0;
+                padding: 0;
+                text-align: center;
+            }
+            #table {
+                position: relative;
+                border-bottom: 10px solid saddlebrown;
+                margin: 150px auto 0;
+                width: 630px;
+            }
+            .margin_top {
+                margin-top: 55px;
+            }
+            .sticks {
+                background-color: saddlebrown;
+                position: absolute;
+                height: 150px;
+                width: 5px;
+                bottom: 0;
+            }
+            .disks {
+                height: 15px;
+                position: absolute;
+                bottom: 0;
+                left: calc(-50px + 2.5px);
+            }
+            .container {
+                padding: 25px;
+                height: 180px;
+                margin-left: 270px;
+                margin-right: 270px;
+                outline-style: double;
+                outline-color: chocolate;
+            }
+            .counter_container {
+                position: relative;
+            }
+            h1 {
+                color:  brown;
+            }
+            #s1 {
+                left: 100px;
+            }
+            #s2 {
+                left: 50%;
+            }
+            #s3 {
+                right: 100px;
+            }
+            #numberOfDisks {
+                width: 100px;
+                display: inline-block;
+            }
+            #numberOfDisksText {
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body>
+        <!--title-->
+        <h1 class="margin_top">Tower Of Hanoi</h1>
+        
+        <!--line of number of disk entry of user ann play and stop buttons-->
+        <div class="counter_container margin_top">
+            <p id="numberOfDisksText">Nymber of disk (2 - 10): </p>
+            <input type="number" id="numberOfDisks" min="2" max="10">
+            <button id="play-button" onClick="play()">Play!</button>
+            <button id="stop-button" onclick="stop()">Stop!</button>
+        </div>
+
+        <!--table interface of sticks-->
+        <div class="container">
+            <div class="margin_top" id="table">
+                <div class="sticks" id="s1">
+                </div>
+                <div class="sticks" id="s2">
+                </div>
+                <div class="sticks" id="s3">
+                </div>
+            </div>
+        </div>
+
+        <!--place where the statistics and moves apears-->
+        <div class="log margin_top"></div>
+
+        <script>
+            // global variables declaration
+            var DISKHEIGHT = 15;
+            var DISKWIDTH = 100; 
+            var moves;
+            var logElement = document.querySelector(".log");
+            var stopInterval;
+            
+            // start the progress
+            function play(){
+                // disable play button until all the moves have been completed
+                document.querySelector("#play-button").disabled = true;
+
+                var t0 = performance.now();
+                var numberOfDisks = document.querySelector("#numberOfDisks").value; // Number of disks
+                if ( numberOfDisks < 2 || numberOfDisks > 10) {
+                    alert("Number must be 2 to 10");
+                    document.querySelector("#play-button").disabled = false;
+                    return;
+                }
+
+                logElement.innerHTML = "";
+                moves = [];
+
+                //clear sticks
+                var sticks = document.querySelectorAll(".sticks");
+                for ( var stick of sticks ) {
+                    stick.innerHTML = "";
+                }      
+
+                for ( var i=0;i<numberOfDisks;i++ ){ 
+                    var cln = document.createElement("img");
+                    cln.classList.add("disks");
+                    cln.src = "img/disk.png";
+                    cln.style.bottom = (DISKHEIGHT * i)+"px";
+                    cln.style.width = (DISKWIDTH - 10*i)+"px";
+                    cln.style['margin-left'] = (5*i)+"px";
+                    document.querySelector("#s1").appendChild(cln);
+                }
+                towerOfHanoi(numberOfDisks, 1, 3, 2);
+                var t1 = performance.now();
+                logElement.innerHTML += "Calculation completed in "+(t1-t0)+" ms <br>";
+                logElement.innerHTML += "Number of moves "+moves.length+"<br>";
+                animateMoves();                
+            }
+
+            // stop the progress and clear
+            function stop() {
+                clearInterval(stopInterval);
+                var sticks = document.querySelectorAll(".sticks");
+                for ( var stick of sticks ) {
+                    stick.innerHTML = "";
+                } 
+                logElement.innerHTML = "";
+                moves = [];                
+                document.querySelector("#play-button").disabled = false;
+            }
+
+            // function for moving a disk from a stick to another
+            function animateMove ( source, destination ) {
+                var sourceElement = document.querySelector("#s"+source);
+                var destinationElement = document.querySelector("#s"+destination);
+                var diskElement = sourceElement.querySelector("img:last-child");
+                diskElement.style.bottom = destinationElement.children.length * DISKHEIGHT;
+                destinationElement.appendChild(diskElement);
+            }
+
+            // function which calls the animateMove for each move is needed to solve the problem
+            function animateMoves () {
+                var counter = 0;
+                stopInterval = setInterval( () => { 
+                    if ( counter == moves.length ) {
+                        document.querySelector("#play-button").disabled = false;
+                        clearInterval(stopInterval);
+                        return;
+                    }
+                    var move = moves[counter];
+                    var source = move.fromrod;
+                    var destination = move.torod;
+                    var diskNumber = move.diskNumber;
+                    animateMove(source, destination );
+                    logElement.innerHTML += (counter+1 + ") Move disk #"+diskNumber+" from rod "+source+" to rod "+destination+"<br>");
+                    counter++;
+                }, 500);
+            }
+
+            // tower of hanoi algorithm
+            function towerOfHanoi ( diskNumber, fromrod, torod, auxrod ) {
+                if ( diskNumber == 1 ) {
+                    moves.push( { fromrod, torod, diskNumber } );
+                    return;
+                }
+                towerOfHanoi(diskNumber-1, fromrod, auxrod, torod);
+                moves.push( { fromrod, torod, diskNumber } );
+                towerOfHanoi(diskNumber-1, auxrod, torod, fromrod);
+            }
+
+        </script>
+
+    </body>
+<html>
